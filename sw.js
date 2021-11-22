@@ -21,21 +21,35 @@ self.addEventListener('activate', e => {
     console.log('[SW]: activate');
 })
 
-self.addEventListener('fetch', e => {
-    const {request} = e;
+// self.addEventListener('fetch', e => {
+//     const {request} = e;
 
-    const url = new URL(request.url);
-    if(url.origin === location.origin) {
-        e.respondWith(cacheFirst(request))
-    } else {
-        e.respondWith(networkFirst(request))
-    }
+//     const url = new URL(request.url);
+//     if(url.origin === location.origin) {
+//         e.respondWith(cacheFirst(request))
+//     } else {
+//         e.respondWith(networkFirst(request))
+//     }
 
 
-})
+// })
+
+self.addEventListener('fetch', function(event) {
+    event.respondWith(
+      caches.open(`${staticCacheName}`).then(function(cache) {
+        return cache.match(event.request).then(function (response) {
+          return response || fetch(event.request).then(function(response) {
+            cache.put(event.request, response.clone());
+            return response;
+          });
+        });
+      })
+    );
+  });
 
 async function cacheFirst(request) {
     const cached = await caches.match(request);
+    console.log(caches.match(request));
 
     return await fetch(request) ?? cached
 }
