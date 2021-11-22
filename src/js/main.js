@@ -40,24 +40,22 @@ function content(key = true) {
 function createListName() {
     //запрос на бек для отримання списку
     request('/api/PM/scoreOption', null, "POST").then(res => {
-        console.log(listNames.childNodes[3], listNames.childNodes[4]);
 
-
-        if(listNames.childNodes[4] && listNames.childNodes[3]) {
-            listNames.removeChild(listNames.childNodes[3])
-            listNames.removeChild(listNames.childNodes[3])
-        }
-
+        const option = document.createElement('option');
+        option.selected = 'true';
+        option.disabled = 'true';
+        option.innerHTML = 'Оберіть...';
+        listNames.appendChild(option);
         res.map(el => {
             const item = document.createElement('option');
-            item.innerHTML = `<option>${el.name}</option>`;
+            item.innerHTML = `${el.name}`;
             listNames.appendChild(item);
         })
 
         return res
     }).then(el => {
         listNames.addEventListener('click', (e) => { //слухач на інпут суми
-            changeValue(e.target.value, el)
+            changeValue(e.target.value)
         })
     })
 
@@ -66,12 +64,30 @@ function createListName() {
 }
 
 //подія на вибір назви  та заповнення стану рахунку
-function changeValue(key,score) {
-    score.forEach(el => {
-        if(el.name === key) {
-            placeOutput.innerHTML = el.value;
-        }
-    });
+function changeValue(key) {
+    const opt = key
+    request('/api/PM/scoreOption', null, "POST").then(res => {
+        listNames.textContent = ''
+        return res
+    }).then( res => {
+        listNames.innerHTML = `<option selected disabled>Оберіть...</option>`
+
+        res.map(el => {
+            const item = document.createElement('option');
+            item.innerHTML = `${el.name}`;
+            item.selected = opt === el.name? true: false;
+            listNames.appendChild(item);
+        })
+        return res
+    }).then(score => {
+
+        score.forEach(el => {
+            if(el.name === key) {
+                placeOutput.innerHTML = el.value;
+            }
+        });
+
+    })
 }
 //подія на створення різниці суми що ввели і існуючого рахунку 
 function changeBeforeSum(key) {
@@ -123,6 +139,7 @@ function createForm(event) {
     const form4 = document.getElementById('form-4');
     const time = document.getElementById('time').innerHTML;
 
+
     const data = {
         name: form1.value,
         value: form2.value,
@@ -152,11 +169,11 @@ function createForm(event) {
     }
 }
 
-//fetch for list changes
+// fetch for list changes
 
-// setInterval(() => {
-//     loadListChanges()
-// }, 10000);
+setInterval(() => {
+    loadListChanges()
+}, 10000);
 function loadListChanges() {
     request('/api/PM/list', null, 'POST')
         .then(res => res.length > 0 ?

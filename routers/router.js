@@ -27,7 +27,7 @@ const personPaymaster = [
                     <form id="form">
                             <label for="validationDefault04" class="form-label">Назва рахунку</label>
                             <select class="form-select list-names" id="form-1" style="width: 60%;" required>
-                                <option selected disabled value="">Оберіть...</option>
+                                
                                 
                             </select>
                             <hr>
