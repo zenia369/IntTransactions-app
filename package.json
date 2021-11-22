@@ -1,0 +1,22 @@
+{
+  "name": "system",
+  "version": "1.0.0",
+  "description": "js node firebase",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "js",
+    "node",
+    "DB"
+  ],
+  "author": "kushinr E.",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-validator": "^6.13.0",
+    "nodemon": "^2.0.15"
+  }
+}

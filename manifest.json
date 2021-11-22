@@ -1,0 +1,27 @@
+{
+    "name": "IntTransactions",
+    "short_name": "IntTransactions PWA",
+    "theme_color": "#7fffd4",
+    "background_color": "#6ed6b3",
+    "display": "standalone",
+    "orientation": "portrait",
+    "start_url": ".",
+    "icons": [
+        {
+            "src": "./icons/icon-192x192.png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "./icons/icon-256x256.png",
+            "sizes": "256x256"
+        },
+        {
+            "src": "./icons/icon-384x384.png",
+            "sizes": "384x384"
+        },
+        {
+            "src": "./icons/icon-512x512.png",
+            "sizes": "512x512"
+        }
+    ]
+}
