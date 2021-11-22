@@ -316,6 +316,7 @@ router.post('/api/PM/saveTr', (req, res) => {
                     time: body.time
                 }
             ]
+            el.value = body.rout === 'витрата' ? el.value - body.value : Number(el.value) + Number(body.value);
             check = false;
             res.status(201).json('true')
         }
@@ -324,7 +325,6 @@ router.post('/api/PM/saveTr', (req, res) => {
         }
 
     })
-
 })
 
 router.post('/api/PM/list', (req, res) => {

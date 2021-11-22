@@ -40,6 +40,14 @@ function content(key = true) {
 function createListName() {
     //запрос на бек для отримання списку
     request('/api/PM/scoreOption', null, "POST").then(res => {
+        console.log(listNames.childNodes[3], listNames.childNodes[4]);
+
+
+        if(listNames.childNodes[4] && listNames.childNodes[3]) {
+            listNames.removeChild(listNames.childNodes[3])
+            listNames.removeChild(listNames.childNodes[3])
+        }
+
         res.map(el => {
             const item = document.createElement('option');
             item.innerHTML = `<option>${el.name}</option>`;
@@ -131,15 +139,24 @@ function createForm(event) {
         request('/api/PM/saveTr', data, 'POST')
             .then(res => res? document.getElementById('reaction__in').innerHTML = "Створено" : document.getElementById('reaction__in').innerHTML = "Помилка")
             .then(() => reactAnimation())
+            .then(() => {
+                form1.value = '';
+                form2.value = '';
+                form3.value = '';
+                form4.value = '';
+                document.getElementById('currenValue1').innerHTML = '';
+                document.getElementById('currenValue2').innerHTML = '';
+            })
+            .then(() => createListName())
             .then(() =>  event.target.disabled = false)
     }
 }
 
 //fetch for list changes
 
-setInterval(() => {
-    loadListChanges()
-}, 10000);
+// setInterval(() => {
+//     loadListChanges()
+// }, 10000);
 function loadListChanges() {
     request('/api/PM/list', null, 'POST')
         .then(res => res.length > 0 ?
