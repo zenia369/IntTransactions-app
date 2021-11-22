@@ -66,6 +66,7 @@ function createListName() {
 
 //подія на вибір назви  та заповнення стану рахунку
 function changeValue(key) {
+    console.log('Yes it work')
     const opt = key
     request('/api/PM/scoreOption', null, "POST").then(res => {
         listNames.textContent = ''
