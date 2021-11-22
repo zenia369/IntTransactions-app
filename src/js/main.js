@@ -41,6 +41,7 @@ function createListName() {
     //запрос на бек для отримання списку
     request('/api/PM/scoreOption', null, "POST").then(res => {
 
+        
         const option = document.createElement('option');
         option.selected = 'true';
         option.disabled = 'true';
