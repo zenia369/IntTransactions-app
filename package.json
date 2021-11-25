@@ -17,6 +17,8 @@
   "dependencies": {
     "express": "^4.17.1",
     "express-validator": "^6.13.0",
+    "mongoose": "^6.0.13",
+    "node-fetch": "^2.6.6",
     "nodemon": "^2.0.15"
   }
 }

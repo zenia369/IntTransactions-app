@@ -1,10 +1,14 @@
+
 const {Router, request} = require('express');
+const mongoose = require('mongoose')
 const router = Router();
 const Path = require('path');
 const fs = require('fs');
 const {check, validationResult} = require('express-validator');
 
+const account = require('../models/account');
 
+let accounts = []; //масив який динамічно змінюється на сервері щоб відповідаючи на деяі запроси не робити запит на БД
 
 
 const personPaymaster = [
@@ -111,23 +115,26 @@ const personAdm = [
     }
 ]
 
-let accounts = [
-    {
-        bank: "prt",
-        bankNumber: "1234567890-23412",
-        name: "укуу",
-        value: "111",
-    },
-    {
-        bank: "prtt",
-        bankNumber: "1234567890-23417",
-        name: "bbb",
-        value: "111",
-    },
-];
 
-router.get('*', (req, res) => { //роут для поверення сторінок
+async function start() {
+    const mUri = 'mongodb+srv://kushnir:1234qwerty@cluster0.qqwk0.mongodb.net/app?retryWrites=true&w=majority';
     try {
+        await mongoose.connect(mUri, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        })
+    } catch (e) {
+        console.log('Server error in connect:', e.message);
+        process.exit();
+    }
+}
+
+start()
+router.get('*', async (req, res) => { //роут для поверення сторінок
+    try {
+        
+        accounts = await account.find({})
+
         let url = req.url;
 
         if(url == '/') {
@@ -198,31 +205,48 @@ router.post('/api/auth',
     }
 })
 
-router.post('/api/ADM/add', (req, res) => {
+router.post('/api/ADM/add', async (req, res) => {
     const body = req.body;
 
-    try {
+    const item = new account({
+        name: body.name,
+        value: body.value,
+        bank: body.bank,
+        bankNumber: body.bankNumber
+    })
 
-        const promise = new Promise((resolve, reject) => {
-            accounts.forEach((el, i) => {
-                if((el.name === body.name || el.bankNumber === body.bankNumber) && accounts.length > 0) {
-                    res.status(400).json('Такий рахунок вже існує');
-                    reject();
-                }
-            }) 
-            resolve()
-        })
-        promise.then(() => {
-            accounts.push(body)
+    try {
+        if(accounts.length > 0) {
+            const promise = new Promise((resolve, reject) => {
+                accounts.forEach((el, i) => {
+                    if((el.name === body.name || el.bankNumber === body.bankNumber) && accounts.length > 0) {
+                        res.status(400).json('Такий рахунок вже існує');
+                        reject();
+                    }
+                }) 
+                resolve()
+            })
+            promise.then(() => {
+                item.save();
+                res.status(201).json('Створено')
+            })
+        } else {
+            
+            await item.save();
+
             res.status(201).json('Створено')
-        })
+        }
+
+        accounts = await account.find({})
+        
 
 
     } catch (error) {
         console.log("Error in add accounts: ", error);
     }
 })
-router.post('/api/ADM/list', (req, res) => {
+router.post('/api/ADM/list', async (req, res) => {
+    accounts = await account.find({})
     try {
         if(accounts.length > 0) {
             const list = accounts.map(el => {
@@ -241,7 +265,8 @@ router.post('/api/ADM/list', (req, res) => {
         console.log('Error in send list:', error);
     }
 })
-router.post('/api/ADM/change', (req, res) => {
+router.post('/api/ADM/change', async (req, res) => {
+    accounts = await account.find({})
     const name = req.body.name;
     accounts.forEach(el => {
         if(el.name === name) {
@@ -250,34 +275,52 @@ router.post('/api/ADM/change', (req, res) => {
     })
 
 })
-router.delete('/api/ADM/change', (req, res) => {
-    const name = req.body.name;
+router.delete('/api/ADM/change', async (req, res) => {
+    const Name = req.body.name;
 
-    accounts = accounts.filter(el => el.name !== name)
+    await account.findOneAndDelete({name: Name})
+    accounts = await account.find({})
 
     res.status(200).json('true')
 })
-router.put('/api/ADM/change', (req, res) => {
-    const body = req.body
+router.put('/api/ADM/change', async (req, res) => {
+    const body = req.body;
 
-    accounts.map((el, i) => {
-        if(el.name === body.stateName) {
-            el.changes = [
-                {
-                    time: `${new Date().getFullYear()}.${new Date().getMonth()+1}.${new Date().getDate()} - ${new Date().getHours()}:${new Date().getUTCMinutes()<10 ? '0' + new Date().getUTCMinutes() : new Date().getUTCMinutes()}`,
-                    name: body.name,
-                    who: "Адміністратор",
-                    before: `Name:${el.name}; Value:${el.value}; Bank:${el.bank}; Bank number:${el.bankNumber}`,
-                    after: `Name:${body.name}; Value:${body.value}; Bank:${body.bank}; Bank number:${body.bankNumber}`
-                }
-            ]
+    await account.findOneAndUpdate({name: body.stateName},{
+        name: body.name,
+        value: body.value,
+        bank: body.bank,
+        bankNumber: body.bankNumber,
+    }).then(async (el) => {
+        if(el.changes.length === 0) {
+            await account.findOneAndUpdate({"name":body.name},{
+                changes: [
+                    {
+                        time: `${new Date().getFullYear()}.${new Date().getMonth()+1}.${new Date().getDate()} - ${new Date().getHours()}:${new Date().getUTCMinutes()<10 ? '0' + new Date().getUTCMinutes() : new Date().getUTCMinutes()}`,
+                        name: body.name,
+                        who: "Адміністратор",
+                        before: `Name:${el.name}; Value:${el.value}; Bank:${el.bank}; Bank number:${el.bankNumber}`,
+                        after: `Name:${body.name}; Value:${body.value}; Bank:${body.bank}; Bank number:${body.bankNumber}`
+                    }
+                ],
+            })
+        } else if(el.changes.length > 0) {
+            let change = el.changes;
+            change.push({
+                time: `${new Date().getFullYear()}.${new Date().getMonth()+1}.${new Date().getDate()} - ${new Date().getHours()}:${new Date().getUTCMinutes()<10 ? '0' + new Date().getUTCMinutes() : new Date().getUTCMinutes()}`,
+                name: body.name,
+                who: "Адміністратор",
+                before: `Name:${el.name}; Value:${el.value}; Bank:${el.bank}; Bank number:${el.bankNumber}`,
+                after: `Name:${body.name}; Value:${body.value}; Bank:${body.bank}; Bank number:${body.bankNumber}`,
+            }) 
 
-            el.name = body.name;
-            el.value = body.value;
-            el.bank = body.bank;
-            el.bankNumber = body.bankNumber;
-
+            await account.findOneAndUpdate({"name":body.name},{
+                changes: change,
+            })
         }
+
+        accounts = await account.find({})
+
     })
 
     res.status(201).json('true')
@@ -288,8 +331,9 @@ router.put('/api/ADM/change', (req, res) => {
 
 //payMaster
 
-router.post('/api/PM/scoreOption', (req, res) => {
-    
+router.post('/api/PM/scoreOption', async (req, res) => {
+    accounts = await account.find({});
+
     const newData = accounts.map(el => {
         return {
             name: el.name,
@@ -300,34 +344,61 @@ router.post('/api/PM/scoreOption', (req, res) => {
     res.status(200).json(newData);
 })
 
-router.post('/api/PM/saveTr', (req, res) => {
+router.post('/api/PM/saveTr', async (req, res) => {
     const body = req.body;
-    let check = true;
 
-    accounts.map((el, i) => {
-        if(el.name === body.name) {
-            el.transaction = [
-                {
-                    name: body.name,
-                    who: "Касир",
-                    rout: `${body.rout}`,
-                    valueBefore: el.value,
-                    valueAfter: body.rout === 'витрата' ? el.value - body.value : Number(el.value) + Number(body.value),
-                    time: body.time
+    try {
+        await account.findOneAndUpdate({name: body.name}, {})
+            .then(async el => {
+                await account.findOneAndUpdate({name: body.name}, {
+                    value: body.rout === 'витрата' ? el.value - body.value : Number(el.value) + Number(body.value),
+                })
+                return el
+            })
+            .then(async el => {
+                if(el.transaction.length === 0) {
+                    await account.findOneAndUpdate({name: body.name}, {
+                        transaction: [
+                            {
+                                name: body.name,
+                                who: "Касир",
+                                rout: `${body.rout}`,
+                                valueBefore: el.value,
+                                valueAfter: body.rout === 'витрата' ? el.value - body.value : Number(el.value) + Number(body.value),
+                                time: body.time
+                            }
+                        ]
+                    })
                 }
-            ]
-            el.value = body.rout === 'витрата' ? el.value - body.value : Number(el.value) + Number(body.value);
-            check = false;
-            res.status(201).json('true')
-        }
-        if(i === accounts.length -1 && check) {
-            res.status(400).json('false')
-        }
+                else {
+                    let transactions = el.transaction;
+                    transactions.push({
+                        name: body.name,
+                        who: "Касир",
+                        rout: `${body.rout}`,
+                        valueBefore: el.value,
+                        valueAfter: body.rout === 'витрата' ? el.value - body.value : Number(el.value) + Number(body.value),
+                        time: body.time
+                    })
 
-    })
+                    await account.findOneAndUpdate({name: body.name}, {
+                        transaction: transactions,
+                    })
+                }
+            })
+            .then(() => res.status(201).json('true'))
+
+        accounts = await account.find({});
+            
+    } catch (e) {
+        res.status(400).json('false')
+        console.log('Error in save PM Tr:', e.message);
+    }
+
 })
 
-router.post('/api/PM/list', (req, res) => {
+router.post('/api/PM/list', async (req, res) => {
+    accounts = await account.find({})
     const data = [];
     accounts.map(el => {
         if(el.changes) {
@@ -338,7 +409,6 @@ router.post('/api/PM/list', (req, res) => {
 
     res.status(201).json(data)
 })
-
 
 
 

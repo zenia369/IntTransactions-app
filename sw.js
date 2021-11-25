@@ -1,6 +1,6 @@
 
-const staticCacheName = 'a-app-v1';
-const dynamicCacheName = 'b-app-v1';
+const staticCacheName = 'a-app-v2';
+const dynamicCacheName = 'b-app-v2';
 
 const assetUrls = [
     './src/index.html',
@@ -21,18 +21,6 @@ self.addEventListener('activate', e => {
     console.log('[SW]: activate');
 })
 
-// self.addEventListener('fetch', e => {
-//     const {request} = e;
-
-//     const url = new URL(request.url);
-//     if(url.origin === location.origin) {
-//         e.respondWith(cacheFirst(request))
-//     } else {
-//         e.respondWith(networkFirst(request))
-//     }
-
-
-// })
 
 self.addEventListener('fetch', function(event) {
     event.respondWith(
