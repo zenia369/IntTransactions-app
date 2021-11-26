@@ -1,6 +1,7 @@
 #IntTransactions app
 
-This application use mongoDB for Data and Heroku for nodeJS server. Also this project is PWA.
+This application use mongoDB for Data and Heroku for nodeJS server.Also this project is PWA.
+
 Link: https://int-transactions.herokuapp.com/
 
 ##For start if you download this in your PC.
