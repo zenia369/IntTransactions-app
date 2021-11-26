@@ -244,7 +244,7 @@ li {
 }
 .main__content-paymaster-list__ul {
   list-style: none;
-  height: 525px;
+  height: 400px;
 }
 .main__content-paymaster-list__ul-item {
   border: 0.5px solid #ccc;
